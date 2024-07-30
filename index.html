@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aggregate Results</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;700&display=swap" />
+    <style>
+        body { background-color: black; color: white; font-family: 'Roboto Mono', monospace; }
+        .chart-container { width: 60%; height: auto; margin-left: 5%; display: flex; justify-content: left; }
+        canvas {font-size: 57px;}
+        .visualiser { margin-top: 20px; }
+        .title{size: 80px; font:'Roboto Mono';text-align: left; margin-left: 5%; padding: 20px }
+        .key { display: flex; justify-content: flex-start; margin-top: 0px; text-align: left; margin-left: 5%; padding: 20px }
+        .ellipse-parent { display: flex; align-items: center; margin: 0 10px; }
+        .frame-child, .frame-item, .frame-inner { width: 20px; height: 20px; border-radius: 50%; margin-right: 10px; }
+        .frame-child { background-color: #FFDC00; }
+        .frame-item { background-color: #FF635D; }
+        .frame-inner { background-color: #1AC987; }
+        b { font-size: 18px; }
+        .recent-counts { display: flex; flex-direction: column; justify-content: center; align-items: center; margin-left: 20px; }
+        .count-box { background-color: black; border: 2px solid white; border-radius: 10px; padding: 10px; margin-bottom: 10px; text-align: center; width: 100px; }
+        .right-image {margin: 20px; position: fixed; right: 10%;}
+        .right-image img { width: 200px; height: auto;}
+        .group-child { position: absolute; top: calc(60% + 224px); left: -1px; border-top: 2px solid #b3b3b3; box-sizing: border-box; width: 100vw; height: 2px; }
+        .group-item { position: absolute; top: calc(60% + 44px); left: -1px; border-top: 2px dashed #b3b3b3; box-sizing: border-box; width: 100vw; height: 2px; }
+        .group-inner { position: absolute; top: calc(60% - 46px); left: -1px; border-top: 2px dashed #b3b3b3; box-sizing: border-box; width: 100vw; height: 2px; }
+        .line-div { position: absolute; top: calc(60% - 136px); left: -1px; border-top: 2px dashed #b3b3b3; box-sizing: border-box; width: 100vw; height: 2px; }
+        .group-child1 { position: absolute; top: calc(60% - 226px); left: -1px; border-top: 2px dashed #b3b3b3; box-sizing: border-box; width: 100vw; height: 2px; }
+        .group-child2 { position: absolute; top: calc(60% + 134px); left: -1px; border-top: 2px dashed #b3b3b3; box-sizing: border-box; width: 100vw; height: 2px; }
+        .line-parent { width: 100%; position: relative; height: 450px; z-index: -1; }
+        .foreground-content { z-index: 1; position:absolute ; top: calc(60%); left: -1px; box-sizing: border-box; width: 100vw; height: 100vw; }
+        .plus-sign::before { content: "+"; }
+    </style>
+</head>
+<body>
+    <div class="right-image">
+        <img src="./logo.svg" alt="Image">
+    </div>
+    <div class="visualiser">
+        <div class="title">
+            <h1>Can you identify the AI imposter?</h1>
+        </div>
+        
+        <div class="line-parent">
+            <div class="group-child"></div>
+            <div class="group-item"></div>
+            <div class="group-inner"></div>
+            <div class="line-div"></div>
+            <div class="group-child1"></div>
+            <div class="group-child2"></div>
+        </div>
+        <div class="foreground-content">
+            <div class="chart-container">
+                <canvas id="resultsChart"></canvas>
+                <div class="recent-counts">
+                    <div class="count-box">
+                        <b>Amateur</b>
+                        <div id="amateur-count" class="plus-sign">0</div>
+                    </div>
+                    <div class="count-box">
+                        <b>Rookie</b>
+                        <div id="rookie-count" class="plus-sign">0</div>
+                    </div>
+                    <div class="count-box">
+                        <b>Pro</b>
+                        <div id="pro-count" class="plus-sign">0</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="key">
+                <div class="ellipse-parent">
+                    <div class="frame-child"></div>
+                    <b>Video</b>
+                </div>
+                <div class="ellipse-parent">
+                    <div class="frame-item"></div>
+                    <b>Audio</b>
+                </div>
+                <div class="ellipse-parent">
+                    <div class="frame-inner"></div>
+                    <b>Image</b>
+                </div>
+            </div>
+
+        </div>
+        
+    </div>
+
+    <script>
+        let chart;
+
+        // Function to fetch data from Airtable
+        async function fetchData() {
+            const response = await fetch('https://api.airtable.com/v0/appoOC9OGPSRRgACV/Table%201', {
+                headers: {
+                    'Authorization': 'Bearer patFK6oNVppWSAEvw.3094966f5fcde47173d52773003596dff4ff9a391626e00ff8bdbc87067f6c15',
+                    'Content-Type': 'application/json'
+                }
+            });
+            const data = await response.json();
+            return data.records;
+        }
+
+        // Function to process and aggregate data
+        function processResults(records) {
+            const results = {
+                image: { amateurs: 0, pros: 0, rookies: 0 },
+                audio: { amateurs: 0, pros: 0, rookies: 0 },
+                video: { amateurs: 0, pros: 0, rookies: 0 },
+            };
+
+            const now = new Date();
+            const pastTime = new Date(now.getTime() - 20 * 60000); // 20 minutes ago
+
+            let recentCounts = { amateurs: 0, pros: 0, rookies: 0 };
+
+            records.forEach(record => {
+                const quizType = record.fields.Quiz;
+                const resultName = record.fields.Result_name;
+                const createdTime = new Date(record.createdTime);
+
+                if (quizType && resultName) {
+                    if (resultName.includes('Amateur')) {
+                        results[quizType].amateurs++;
+                    } else if (resultName.includes('Pro')) {
+                        results[quizType].pros++;
+                    } else if (resultName.includes('Rookie')) {
+                        results[quizType].rookies++;
+                    }
+
+                    if (createdTime >= pastTime) {
+                        if (resultName.includes('Amateur')) {
+                            recentCounts.amateurs++;
+                        } else if (resultName.includes('Pro')) {
+                            recentCounts.pros++;
+                        } else if (resultName.includes('Rookie')) {
+                            recentCounts.rookies++;
+                        }
+                    }
+                }
+            });
+
+            document.getElementById('amateur-count').textContent = recentCounts.amateurs;
+            document.getElementById('rookie-count').textContent = recentCounts.rookies;
+            document.getElementById('pro-count').textContent = recentCounts.pros;
+
+            return results;
+        }
+
+        // Create chart data
+        function createChartData(results) {
+            return {
+                labels: ['Amateur', 'Rookie', 'Pro'],
+                datasets: [
+                    {
+                        label: 'Image',
+                        data: [
+                            results.image.amateurs,  
+                            results.image.rookies,  
+                            results.image.pros,
+                        ],
+                        backgroundColor: '#FF635D', // red
+                        borderColor: '#FF635D',
+                        borderWidth: 1
+                    },
+                    {
+                        label: 'Audio',
+                        data: [
+                            results.audio.amateurs, 
+                            results.audio.rookies, 
+                            results.audio.pros,
+                        ],
+                        backgroundColor: '#1AC987', // green
+                        borderColor: '#1AC987',
+                        borderWidth: 1
+                    },
+                    {
+                        label: 'Video',
+                        data: [
+                            results.video.amateurs,
+                            results.video.rookies,
+                            results.video.pros
+                        ],
+                        backgroundColor: '#FFDC00', // yellow
+                        borderColor: '#FFDC00',
+                        borderWidth: 1
+                    }
+                ]
+            };
+        }
+
+        // Chart options for better UX
+        const options = {
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    display: false,
+                    
+                },
+                x: {
+                    ticks: {
+                        color: 'white' // set x-axis label color to white
+                    }
+                }
+            },
+            plugins: {
+                legend: {
+                    display: false
+                }
+            }
+        };
+
+        // Function to render Chart
+        function renderChart(ctxId, chartData) {
+            const ctx = document.getElementById(ctxId).getContext('2d');
+            if (chart) {
+                chart.destroy(); // Destroy the existing chart if it exists
+            }
+            chart = new Chart(ctx, {
+                type: 'bar',
+                data: chartData,
+                options: options
+            });
+        }
+
+
+        // Function to fetch data and update chart
+        async function updateChart() {
+            const records = await fetchData();
+            const results = processResults(records);
+            const chartData = createChartData(results);
+            renderChart('resultsChart', chartData);
+        }
+
+        // Fetch and render the data when the window loads
+        window.onload = function() {
+            updateChart();
+            setInterval(updateChart, 60000); // Update chart every 60 seconds (60000 milliseconds)
+        };
+    </script>
+</body>
+</html>
+
+
