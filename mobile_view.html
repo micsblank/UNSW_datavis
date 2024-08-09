@@ -1,0 +1,563 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aggregate Results</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;700&display=swap" />
+    <style>
+        body {
+            background-color: black;
+            color: white;
+            font-family: 'Roboto Mono', monospace;
+            margin: 0;
+            padding: 0;
+        }
+        .visualiser {
+            margin-top: 20%;
+        }
+        .title {
+            width: 90%;
+            font-family: 'Roboto Mono';
+            text-align: left;
+            margin-left: 5%;
+            padding-top: 20px;
+            line-height: 1.5;
+            max-width: 50vw;
+
+        }
+        
+        .right-image {
+            margin-top: 20px;
+            position: absolute;
+            right: 10%;
+        }
+        .right-image img {
+            width: 170px;
+            height: auto;
+        }
+        .key {
+            display: flex;
+            margin-top: 0px;
+            text-align: left;
+            margin-top: 1em;
+            padding-bottom: 20px;
+        }
+        .chart-container {
+            width: 70%;
+            
+            /* margin-left: 5%; */
+            display: flex;
+            justify-content: left;
+            font-size: 25px;
+            background: rgba(rgba(255, 199, 254, 0.844));
+        }
+        .ellipse-parent {
+            display: flex;
+            align-items: center;
+            margin: 0 10px;
+        }
+        .frame-child, .frame-item, .frame-inner {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            margin-right: 10px;
+        }
+        .frame-child {
+            background-color: #FFDC00; /*audio */
+        }
+        .frame-item {
+            background-color: #FF8200; /*video */
+        }
+        .frame-inner {
+            background-color: #8A68C8; /*image */
+        }
+        .count-box {
+            background-color: black;
+            border: 2.2px solid #b3b3b3;
+            border-radius: 22px;
+            padding: .5em;
+            
+            text-align: center;
+            width: 4em;
+            height: 3em;
+        }
+        .recent-counts {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            /* margin-left: 20px; */
+        }
+                /* lines */
+        .solid-line, .line2, .line3, .line4, .line5, .line1 {
+            position: absolute;
+            left: -1px;
+            border-top: .2vh dashed #b3b3b3;
+            box-sizing: border-box;
+            width: 100vw;
+            height: 2px;
+        }
+        .solid-line { top: calc(100%); border-top: .2vh solid #b3b3b3; }
+        .line1 { top: calc(80%); }
+        .line2 { top: calc(60%); }
+        .line3 { top: calc(40%); }
+        .line4 { top: calc(20%); }
+        .line5 { top: calc(0%); }
+        
+        .line-parent {
+            width: 100vw;
+            position: absolute;
+            height: 25vw;
+            top: calc(25vh);
+            z-index: -1;
+            left: -5px;
+        }
+        /* .chart-content {
+            width: 90%;
+            position: absolute;
+            top: calc(30vh);
+            height: calc(25vh + 350px);
+            z-index: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: left;
+            align-items: left;
+            margin-left: 10%;
+        } */
+        
+        .plus-sign::before {
+            content: "+";
+        }
+        .header-div {
+            margin-top: 5vh; 
+        }
+        .text-header {
+            font-size: 12px;
+            font-weight: 700;
+            text-align: center;
+            color: black;
+            background-color: white;
+            margin-left: 20px;
+            display: inline-block;
+            margin-bottom: 10px;
+            border: none;
+            /* position: absolute; */
+        }
+        .right {
+            left: calc(5% + 18px);
+            top: calc(25vh - 210px);
+        }
+        .top {
+            top: calc(25vh - 223px);
+            position: relative;
+        }
+        .small-screen { display: none;}
+
+        /* 4K screens */
+        @media (min-width: 2560px) {
+            .mobile{ display: none;}
+            .title {
+                font-size: 36px;
+            }
+            .right-image img {
+                width: 250px;
+            }
+        }
+
+        /* Laptop screens */
+        @media (min-width: 1024px) and (max-width: 2559px) {
+            .mobile{ display: none;}
+     
+            .title {
+                font-size: 24px;
+            }
+            .right-image img {
+                width: 300px;
+            }
+        }
+
+        /* iPad screens */
+        @media (min-width: 768px) and (max-width: 1023px) {
+            .mobile{ display: none;}
+            /* .right-image {
+                right: 5%;
+                
+            } */
+            .title {
+                font-size: 18px;
+            }
+            
+        }
+
+        /* Phone screens */
+        @media (max-width: 767px) {
+            .FourK-screen {
+                display: none;
+            }
+
+            .visualiser {
+                margin-top: 20px;
+            }
+            .right-image {
+                display: none
+            }
+            .recent-counts {
+                flex-direction: row;
+            }
+            .small-screen { display: block;}
+            
+            .title {
+                font-size: 12px;
+                text-align: left;
+                margin-left: 30px;
+                
+            }
+            .title img {
+              width: 80vw;
+            }
+            
+            
+            .overlap { position: relative; height: 200px; width: 100vw}
+            .line-parent { left:1px; top: 0; position: absolute; display:none}
+            .chart-container {
+                top: 0;
+                position: relative;
+                width: 100vw;
+                height: 150px;
+                background-color: green;
+                /* display: none; */
+
+            }
+            canvas {
+                /* top: -0px; */
+                left: 5px;
+                position: absolute;
+                /* width:100px; */
+                /* background-color: rgba(255, 255, 255, 0); */
+
+            }
+
+            /* .solid-line { top: 155px; border-top: .2vh solid #b3b3b3; }
+            .line1 { top: 120px; }
+            .line2 { top: 0px; }
+            .line3 { top: 90px; }
+            .line4 { top: 60px; }
+            .line5 { top: 30px; } */
+            .key {
+                font-size: 12px;
+                margin-top: 0px;
+                /* text-align: left;
+                margin-top: 1em; */
+                padding-bottom: 10px;
+            }
+            .count-box {
+                margin-top: 10px;
+            background-color: black;
+            border: 2.2px solid #b3b3b3;
+            border-radius: 22px;
+            font-size: 12px;
+            width: 100px;
+            text-align: center;
+
+        }
+
+           
+        }
+    </style>
+</head>
+<body>
+    <div class="header-div">
+    <div class="right-image">
+        <img src="./logo.svg" alt="Image">
+        
+    </div>
+    <div class="title">
+      <img src="./logo.svg" alt="Image" class="small-screen">
+        <h1>Can you identify the AI imposter?</h1>
+    </div>
+  </div>
+    <div class="mobile">
+        <div class="text-header">
+            TOTAL OUTCOMES
+            </div>
+                <div class="overlap"> 
+                    <div class="line-parent">
+                        <div class="solid-line"></div>
+                        <div class="line1"></div>
+                        <div class="line2"></div>
+                        <div class="line3"></div>
+                        <div class="line4"></div>
+                        <div class="line5"></div>
+                    </div>
+                    <canvas id="resultsChart"></canvas>
+                </div>
+                <div class="key">
+                    <div class="ellipse-parent">
+                        <div class="frame-child"></div>
+                        <b>Video</b>
+                    </div>
+                    <div class="ellipse-parent">
+                        <div class="frame-item"></div>
+                        <b>Audio</b>
+                    </div>
+                    <div class="ellipse-parent">
+                        <div class="frame-inner"></div>
+                        <b>Image</b>
+                    </div>
+                </div>
+                <span class="text-header">
+                    LAST 20 MINUTES
+                </span>
+                <div class="recent-counts">
+                    
+                    <div class="count-box">
+                        <b>Amateur</b>
+                        <div id="amateur-count" class="plus-sign">0</div>
+                    </div>
+                    <div class="count-box">
+                        <b>Rookie</b>
+                        <div id="rookie-count" class="plus-sign">0</div>
+                    </div>
+                    <div class="count-box">
+                        <b>Pro</b>
+                        <div id="pro-count" class="plus-sign">0</div>
+                    </div>
+                </div>
+    </div>
+
+    <div class="FourK-screen">
+        <div class="line-parent">
+            <div class="group-child"></div>
+            <div class="group-item"></div>
+            <div class="group-inner"></div>
+            <div class="line-div"></div>
+            <div class="group-child1"></div>
+            <div class="group-child2"></div>
+        </div>
+        <div class="line-parent2">
+            
+            <div class="chart-container">
+                dfsdf
+                <canvas id="resultsChart"></canvas>
+                sdfsd
+                <div class="recent-counts">
+                    <div>
+                        <span class="text-header right">
+                            TOTAL OUTCOMES
+                        </span>
+                       
+                    <span class="text-header top">
+                        LAST 20 MINUTES
+                    </span>
+                    </div>
+                    <div class="count-box">
+                        <b>Amateur</b>
+                        <div id="amateur-count" class="plus-sign">0</div>
+                    </div>
+                    <div class="count-box">
+                        <b>Rookie</b>
+                        <div id="rookie-count" class="plus-sign">0</div>
+                    </div>
+                    <div class="count-box">
+                        <b>Pro</b>
+                        <div id="pro-count" class="plus-sign">0</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="key">
+            <div class="ellipse-parent">
+                <div class="frame-child"></div>
+                <b>Video</b>
+            </div>
+            <div class="ellipse-parent">
+                <div class="frame-item"></div>
+                <b>Audio</b>
+            </div>
+            <div class="ellipse-parent">
+                <div class="frame-inner"></div>
+                <b>Image</b>
+            </div>
+        </div>
+    </div>
+    
+    </div>
+   
+
+    <script>
+        let chart;
+
+        // Function to fetch data from Airtable
+        async function fetchData() {
+            const response = await fetch('https://api.airtable.com/v0/appoOC9OGPSRRgACV/Table%201', {
+                headers: {
+                    'Authorization': 'Bearer patFK6oNVppWSAEvw.3094966f5fcde47173d52773003596dff4ff9a391626e00ff8bdbc87067f6c15',
+                    'Content-Type': 'application/json'
+                }
+            });
+            const data = await response.json();
+            return data.records;
+        }
+
+        // Function to process and aggregate data
+        function processResults(records) {
+            const results = {
+                image: { amateurs: 0, pros: 0, rookies: 0 },
+                audio: { amateurs: 0, pros: 0, rookies: 0 },
+                video: { amateurs: 0, pros: 0, rookies: 0 },
+            };
+
+            const now = new Date();
+            const pastTime = new Date(now.getTime() - 20 * 60000); // 20 minutes ago
+
+            let recentCounts = { amateurs: 0, pros: 0, rookies: 0 };
+
+            records.forEach(record => {
+                const quizType = record.fields.Quiz;
+                const resultName = record.fields.Result_name;
+                const createdTime = new Date(record.createdTime);
+
+                if (quizType && resultName) {
+                    if (resultName.includes('Amateur')) {
+                        results[quizType].amateurs++;
+                    } else if (resultName.includes('Pro')) {
+                        results[quizType].pros++;
+                    } else if (resultName.includes('Rookie')) {
+                        results[quizType].rookies++;
+                    }
+
+                    if (createdTime >= pastTime) {
+                        if (resultName.includes('Amateur')) {
+                            recentCounts.amateurs++;
+                        } else if (resultName.includes('Pro')) {
+                            recentCounts.pros++;
+                        } else if (resultName.includes('Rookie')) {
+                            recentCounts.rookies++;
+                        }
+                    }
+                }
+            });
+
+            document.getElementById('amateur-count').textContent = recentCounts.amateurs;
+            document.getElementById('rookie-count').textContent = recentCounts.rookies;
+            document.getElementById('pro-count').textContent = recentCounts.pros;
+
+            return results;
+        }
+
+        // Create chart data
+        function createChartData(results) {
+            return {
+                labels: ['Amateur', 'Rookie', 'Pro'],  
+                
+                datasets: [
+                    {
+                        label: 'Video',
+                        data: [
+                            results.video.amateurs,
+                            results.video.rookies,
+                            results.video.pros
+                        ],
+                        backgroundColor: '#FF8200', // orange
+                        borderColor: '#FF8200',
+                        borderWidth: 1
+                    },
+                    {
+                        label: 'Audio',
+                        data: [
+                            results.audio.amateurs, 
+                            results.audio.rookies, 
+                            results.audio.pros,
+                        ],
+                        backgroundColor: '#FFDC00', // Yellow
+                        borderColor: '#FFDC00',
+                        borderWidth: 1
+                    },
+                    {
+                        label: 'Photo',
+                        data: [
+                            results.image.amateurs,  
+                            results.image.rookies,  
+                            results.image.pros,
+                        ],
+                        backgroundColor: '#8A68C8', // Purple
+                        borderColor: '#8A68C8',
+                        borderWidth: 1
+                    }
+                   
+                    
+                ]
+            };
+        }
+
+        function getFontSize() {
+            return window.innerWidth <= 767 ? 14 : 25; // 10 for phone size, 25 for larger screens
+        }
+        function getDisplay() {
+            return window.innerWidth <= 767 ? true : false; // show lines
+        }
+        // Chart options for better UX
+        const options = {
+            animation: false,
+            maintainAspectRatio: true,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    // display: getDisplay(),
+                    grid: { color: 'white' },
+                    ticks: { display: false}
+                },
+                x: {
+                    grid: {
+                            display: false // Hide the x-axis grid lines
+                    },
+                    ticks: {
+                        color: 'white', // set x-axis label color to white
+                        font: {
+                            size: getFontSize(),
+                            family: 'Roboto Mono',
+                            position: "left"
+                        }
+                        
+                    },
+                }
+            },
+            plugins: {
+                legend: {
+                    display: false
+                },
+                
+            }
+        };
+
+        // Function to render Chart
+        function renderChart(ctxId, chartData) {
+            const ctx = document.getElementById(ctxId).getContext('2d');
+            if (chart) {
+                chart.destroy(); // Destroy the existing chart if it exists
+            }
+            chart = new Chart(ctx, {
+                type: 'bar',
+                data: chartData,
+                options: options
+            });
+        }
+
+        // Function to fetch data and update chart
+        async function updateChart() {
+            const records = await fetchData();
+            const results = processResults(records);
+            const chartData = createChartData(results);
+            renderChart('resultsChart', chartData);
+        }
+
+        // Fetch and render the data when the window loads
+        window.onload = function() {
+            updateChart();
+            setInterval(updateChart, 60000); // Update chart every 60 seconds (60000 milliseconds)
+        };
+    </script>
+</body>
+</html>
